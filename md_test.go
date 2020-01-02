@@ -2,6 +2,7 @@ package md
 
 import (
 	"bytes"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,13 +13,17 @@ import (
 )
 
 func TestRenderer(t *testing.T) {
-	source := []byte(`test`)
+	input, err := ioutil.ReadFile(`testdata/input.md`)
+	assert.NoError(t, err)
+
+	expected, err := ioutil.ReadFile(`testdata/expected.md`)
+	assert.NoError(t, err)
 
 	var buf bytes.Buffer
-	reader := text.NewReader(source)
+	reader := text.NewReader(input)
 	node := goldmark.DefaultParser().Parse(reader)
 	r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
 
-	assert.NoError(t, r.Render(&buf, source, node))
-	assert.Empty(t, buf.Bytes())
+	assert.NoError(t, r.Render(&buf, input, node))
+	assert.Equal(t, expected, buf.Bytes())
 }
