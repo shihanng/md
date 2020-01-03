@@ -20,7 +20,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindHTMLBlock, r.renderNoop)
 	reg.Register(ast.KindList, r.renderNoop)
 	reg.Register(ast.KindListItem, r.renderNoop)
-	reg.Register(ast.KindParagraph, r.renderNoop)
+	reg.Register(ast.KindParagraph, r.renderParagraph)
 	reg.Register(ast.KindTextBlock, r.renderNoop)
 	reg.Register(ast.KindThematicBreak, r.renderNoop)
 
@@ -37,6 +37,16 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 }
 
 func (r *Renderer) renderNoop(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	return ast.WalkContinue, nil
+}
+
+func (r *Renderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	// TODO: Handle list depth
+	if !entering {
+		if _, ok := node.NextSibling().(ast.Node); ok && node.FirstChild() != nil {
+			_, _ = w.WriteString("\n\n")
+		}
+	}
 	return ast.WalkContinue, nil
 }
 
