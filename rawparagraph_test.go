@@ -13,7 +13,7 @@ import (
 )
 
 func TestRawParagraph(t *testing.T) {
-	input, err := ioutil.ReadFile(`testdata/input.md`)
+	input, err := ioutil.ReadFile(`testdata/rawparagraph_input.md`)
 	assert.NoError(t, err)
 
 	expected, err := ioutil.ReadFile(`testdata/rawparagraph_expected.md`)
