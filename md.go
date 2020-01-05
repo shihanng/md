@@ -2,7 +2,9 @@ package md
 
 import (
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 )
 
@@ -87,3 +89,47 @@ func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, en
 
 	return ast.WalkContinue, nil
 }
+
+type emphasisParser struct {
+}
+
+var defaultEmphasisParser = &emphasisParser{}
+
+// NewEmphasisParser return a new InlineParser that parses emphasises.
+func NewEmphasisParser() parser.InlineParser {
+	return defaultEmphasisParser
+}
+
+func (s *emphasisParser) Trigger() []byte {
+	return []byte{'*', '_'}
+}
+
+func (s *emphasisParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
+	before := block.PrecendingCharacter()
+	line, segment := block.PeekLine()
+	node := parser.ScanDelimiter(line, before, 1, defaultEmphasisDelimiterProcessor)
+	if node == nil {
+		return nil
+	}
+	node.Segment = segment.WithStop(segment.Start + node.OriginalLength)
+	block.Advance(node.OriginalLength)
+	pc.PushDelimiter(node)
+	return node
+}
+
+type emphasisDelimiterProcessor struct {
+}
+
+func (p *emphasisDelimiterProcessor) IsDelimiter(b byte) bool {
+	return b == '*' || b == '_'
+}
+
+func (p *emphasisDelimiterProcessor) CanOpenCloser(opener, closer *parser.Delimiter) bool {
+	return opener.Char == closer.Char
+}
+
+func (p *emphasisDelimiterProcessor) OnMatch(consumes int) ast.Node {
+	return ast.NewEmphasis(consumes)
+}
+
+var defaultEmphasisDelimiterProcessor = &emphasisDelimiterProcessor{}
