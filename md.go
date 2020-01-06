@@ -29,7 +29,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindAutoLink, r.renderNoop)
 	reg.Register(ast.KindCodeSpan, r.renderNoop)
 	reg.Register(ast.KindEmphasis, r.renderEmphasis)
-	reg.Register(ast.KindImage, r.renderNoop)
+	reg.Register(ast.KindImage, r.renderImage)
 	reg.Register(ast.KindLink, r.renderNoop)
 	reg.Register(ast.KindRawHTML, r.renderNoop)
 	reg.Register(ast.KindText, r.renderText)
@@ -66,6 +66,24 @@ func (r *Renderer) renderEmphasis(w util.BufWriter, source []byte, node ast.Node
 	}
 
 	return ast.WalkContinue, nil
+}
+
+func (r *Renderer) renderImage(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if !entering {
+		return ast.WalkContinue, nil
+	}
+	n := node.(*ast.Image)
+	_, _ = w.WriteString(`![`)
+	_, _ = w.Write(n.Text(source))
+	_, _ = w.WriteString(`](`)
+	_, _ = w.Write(n.Destination)
+	if n.Title != nil {
+		_, _ = w.WriteString(` "`)
+		_, _ = w.Write(n.Title)
+		_ = w.WriteByte('"')
+	}
+	_, _ = w.WriteString(`)`)
+	return ast.WalkSkipChildren, nil
 }
 
 func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
