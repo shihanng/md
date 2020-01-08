@@ -12,11 +12,11 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-func TestRawParagraph(t *testing.T) {
-	input, err := ioutil.ReadFile(`testdata/rawparagraph_input.md`)
+func TestRaw(t *testing.T) {
+	input, err := ioutil.ReadFile(`testdata/raw_input.md`)
 	assert.NoError(t, err)
 
-	expected, err := ioutil.ReadFile(`testdata/rawparagraph_expected.md`)
+	expected, err := ioutil.ReadFile(`testdata/raw_expected.md`)
 	assert.NoError(t, err)
 
 	reader := text.NewReader(input)

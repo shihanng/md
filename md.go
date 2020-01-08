@@ -117,6 +117,8 @@ func (r *Renderer) renderImage(w util.BufWriter, source []byte, node ast.Node, e
 }
 
 func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	// TODO: Revisit this implementation
+
 	if !entering {
 		return ast.WalkContinue, nil
 	}
