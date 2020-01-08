@@ -1,6 +1,8 @@
 package md
 
 import (
+	"strings"
+
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/util"
@@ -13,7 +15,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	// blocks
 
 	reg.Register(ast.KindDocument, r.renderNoop)
-	reg.Register(ast.KindHeading, r.renderNoop)
+	reg.Register(ast.KindHeading, r.renderHeading)
 	reg.Register(ast.KindBlockquote, r.renderNoop)
 	reg.Register(ast.KindCodeBlock, r.renderNoop)
 	reg.Register(ast.KindFencedCodeBlock, r.renderNoop)
@@ -37,6 +39,34 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 }
 
 func (r *Renderer) renderNoop(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	return ast.WalkContinue, nil
+}
+
+func (r *Renderer) renderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	n := node.(*ast.Heading)
+
+	if entering {
+		if len(n.Text(source)) == 0 || n.Level > 2 {
+			_, _ = w.WriteString(strings.Repeat("#", n.Level))
+
+			if len(n.Text(source)) > 0 {
+				_ = w.WriteByte(' ')
+			} else {
+				_, _ = w.WriteString("\n\n")
+			}
+		}
+	} else if l := len(n.Text(source)); l > 0 {
+		switch n.Level {
+		case 1:
+			_ = w.WriteByte('\n')
+			_, _ = w.WriteString(strings.Repeat("=", l))
+		case 2:
+			_ = w.WriteByte('\n')
+			_, _ = w.WriteString(strings.Repeat("-", l))
+		}
+		_, _ = w.WriteString("\n\n")
+	}
+
 	return ast.WalkContinue, nil
 }
 
