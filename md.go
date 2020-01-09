@@ -117,8 +117,6 @@ func (r *Renderer) renderImage(w util.BufWriter, source []byte, node ast.Node, e
 }
 
 func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
-	// TODO: Revisit this implementation
-
 	if !entering {
 		return ast.WalkContinue, nil
 	}
@@ -129,10 +127,9 @@ func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, en
 
 	switch {
 	case n.HardLineBreak():
-		_, _ = w.WriteString(`  `)
-		_ = w.WriteByte('\n')
+		_, _ = w.WriteString("\n ")
 	case n.SoftLineBreak():
-		_ = w.WriteByte('\n')
+		_ = w.WriteByte(' ')
 	}
 
 	return ast.WalkContinue, nil

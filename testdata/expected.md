@@ -1,8 +1,8 @@
 Head 1
 ======
 
-line 1  
-line 2
+line 1
+ line 2
 
 Head 2
 ------
@@ -13,8 +13,7 @@ Head 2
 
 #
 
-line 1
-line 2
+line 1 line 2
 
 *Emphasis*
 

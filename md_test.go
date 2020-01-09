@@ -25,5 +25,5 @@ func TestRenderer(t *testing.T) {
 	r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
 
 	assert.NoError(t, r.Render(&buf, input, node))
-	assert.Equal(t, expected, buf.Bytes())
+	assert.Equal(t, string(expected), buf.String())
 }
