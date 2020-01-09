@@ -3,7 +3,9 @@ package md
 import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
+	"github.com/yuin/goldmark/util"
 )
 
 type rawParagraphParser struct {
@@ -64,4 +66,46 @@ func (b *rawParagraphParser) CanInterruptParagraph() bool {
 
 func (b *rawParagraphParser) CanAcceptIndentedLine() bool {
 	return false
+}
+
+type RawRenderer struct{}
+
+// RegisterFuncs implements github.com/yuin/goldmark/renderer NodeRenderer.RegisterFuncs.
+func (r *RawRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	// blocks
+
+	reg.Register(ast.KindParagraph, r.renderParagraph)
+
+	// inlines
+
+	reg.Register(ast.KindText, r.renderText)
+}
+
+func (r *RawRenderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if !entering {
+		if _, ok := node.NextSibling().(ast.Node); ok && node.FirstChild() != nil {
+			_, _ = w.WriteString("\n\n")
+		}
+	}
+	return ast.WalkContinue, nil
+}
+
+func (r *RawRenderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if !entering {
+		return ast.WalkContinue, nil
+	}
+
+	n := node.(*ast.Text)
+	segment := n.Segment
+	_, _ = w.Write(segment.Value(source))
+
+	switch {
+	case n.HardLineBreak():
+		_, _ = w.WriteString(`  `)
+		_ = w.WriteByte('\n')
+	case n.SoftLineBreak():
+		_ = w.WriteByte('\n')
+	}
+
+	return ast.WalkContinue, nil
 }
