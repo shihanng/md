@@ -82,11 +82,6 @@ func (r *RawRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 }
 
 func (r *RawRenderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
-	if !entering {
-		if _, ok := node.NextSibling().(ast.Node); ok && node.FirstChild() != nil {
-			_, _ = w.WriteString("\n\n")
-		}
-	}
 	return ast.WalkContinue, nil
 }
 
