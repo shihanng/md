@@ -24,3 +24,4 @@ line 2
 **Strong**
 
 ![alt text](./image.png    "image title")
+[text](./link.png	"title")
