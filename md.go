@@ -14,35 +14,36 @@ type Renderer struct{}
 func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	// blocks
 
-	reg.Register(ast.KindDocument, r.renderNoop)
-	reg.Register(ast.KindHeading, r.renderHeading)
-	reg.Register(ast.KindBlockquote, r.renderNoop)
-	reg.Register(ast.KindCodeBlock, r.renderNoop)
-	reg.Register(ast.KindFencedCodeBlock, r.renderNoop)
-	reg.Register(ast.KindHTMLBlock, r.renderNoop)
-	reg.Register(ast.KindList, r.renderNoop)
-	reg.Register(ast.KindListItem, r.renderNoop)
-	reg.Register(ast.KindParagraph, r.renderParagraph)
-	reg.Register(ast.KindTextBlock, r.renderNoop)
-	reg.Register(ast.KindThematicBreak, r.renderNoop)
+	reg.Register(ast.KindDocument, RenderNoop)
+	reg.Register(ast.KindHeading, RenderHeading)
+	reg.Register(ast.KindBlockquote, RenderNoop)
+	reg.Register(ast.KindCodeBlock, RenderNoop)
+	reg.Register(ast.KindFencedCodeBlock, RenderNoop)
+	reg.Register(ast.KindHTMLBlock, RenderNoop)
+	reg.Register(ast.KindList, RenderNoop)
+	reg.Register(ast.KindListItem, RenderNoop)
+	reg.Register(ast.KindParagraph, RenderParagraph)
+	reg.Register(ast.KindTextBlock, RenderNoop)
+	reg.Register(ast.KindThematicBreak, RenderNoop)
 
 	// inlines
 
-	reg.Register(ast.KindAutoLink, r.renderNoop)
-	reg.Register(ast.KindCodeSpan, r.renderNoop)
-	reg.Register(ast.KindEmphasis, r.renderEmphasis)
-	reg.Register(ast.KindImage, r.renderImage)
-	reg.Register(ast.KindLink, r.renderLink)
-	reg.Register(ast.KindRawHTML, r.renderNoop)
-	reg.Register(ast.KindText, r.renderText)
-	reg.Register(ast.KindString, r.renderNoop)
+	reg.Register(ast.KindAutoLink, RenderNoop)
+	reg.Register(ast.KindCodeSpan, RenderNoop)
+	reg.Register(ast.KindEmphasis, RenderEmphasis)
+	reg.Register(ast.KindImage, RenderImage)
+	reg.Register(ast.KindLink, RenderLink)
+	reg.Register(ast.KindRawHTML, RenderNoop)
+	reg.Register(ast.KindText, RenderText)
+	reg.Register(ast.KindString, RenderNoop)
 }
 
-func (r *Renderer) renderNoop(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+// RenderNoop does nothing.
+func RenderNoop(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	return ast.WalkContinue, nil
 }
 
-func (r *Renderer) renderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.Heading)
 
 	if entering {
@@ -70,7 +71,7 @@ func (r *Renderer) renderHeading(w util.BufWriter, source []byte, node ast.Node,
 	return ast.WalkContinue, nil
 }
 
-func (r *Renderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	// TODO: Handle list depth
 	if !entering {
 		if _, ok := node.NextSibling().(ast.Node); ok && node.FirstChild() != nil {
@@ -80,7 +81,7 @@ func (r *Renderer) renderParagraph(w util.BufWriter, source []byte, node ast.Nod
 	return ast.WalkContinue, nil
 }
 
-func (r *Renderer) renderEmphasis(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderEmphasis(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.Emphasis)
 
 	star := "*"
@@ -98,7 +99,7 @@ func (r *Renderer) renderEmphasis(w util.BufWriter, source []byte, node ast.Node
 	return ast.WalkContinue, nil
 }
 
-func (r *Renderer) renderImage(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderImage(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}
@@ -116,7 +117,7 @@ func (r *Renderer) renderImage(w util.BufWriter, source []byte, node ast.Node, e
 	return ast.WalkSkipChildren, nil
 }
 
-func (r *Renderer) renderLink(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderLink(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}
@@ -134,7 +135,7 @@ func (r *Renderer) renderLink(w util.BufWriter, source []byte, node ast.Node, en
 	return ast.WalkSkipChildren, nil
 }
 
-func (r *Renderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RenderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}

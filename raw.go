@@ -74,18 +74,18 @@ type RawRenderer struct{}
 func (r *RawRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	// blocks
 
-	reg.Register(ast.KindParagraph, r.renderParagraph)
+	reg.Register(ast.KindParagraph, RawRenderParagraph)
 
 	// inlines
 
-	reg.Register(ast.KindText, r.renderText)
+	reg.Register(ast.KindText, RawRenderText)
 }
 
-func (r *RawRenderer) renderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RawRenderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	return ast.WalkContinue, nil
 }
 
-func (r *RawRenderer) renderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func RawRenderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if !entering {
 		return ast.WalkContinue, nil
 	}
