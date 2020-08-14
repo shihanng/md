@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/renderer"
@@ -13,10 +14,7 @@ import (
 )
 
 func TestRenderer(t *testing.T) {
-	input, err := ioutil.ReadFile(`testdata/input.md`)
-	assert.NoError(t, err)
-
-	expected, err := ioutil.ReadFile(`testdata/expected.md`)
+	input, err := ioutil.ReadFile(`testdata/standard_renderer.md`)
 	assert.NoError(t, err)
 
 	var buf bytes.Buffer
@@ -25,5 +23,7 @@ func TestRenderer(t *testing.T) {
 	r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
 
 	assert.NoError(t, r.Render(&buf, input, node))
-	assert.Equal(t, string(expected), buf.String())
+
+	g := goldie.New(t)
+	g.Assert(t, "standard_renderer", buf.Bytes())
 }
