@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
@@ -13,10 +14,7 @@ import (
 )
 
 func TestRaw(t *testing.T) {
-	input, err := ioutil.ReadFile(`testdata/raw_input.md`)
-	assert.NoError(t, err)
-
-	expected, err := ioutil.ReadFile(`testdata/raw_expected.md`)
+	input, err := ioutil.ReadFile(`testdata/raw.md`)
 	assert.NoError(t, err)
 
 	reader := text.NewReader(input)
@@ -32,5 +30,7 @@ func TestRaw(t *testing.T) {
 
 	var buf bytes.Buffer
 	assert.NoError(t, r.Render(&buf, input, node))
-	assert.Equal(t, string(expected), buf.String())
+
+	g := goldie.New(t)
+	g.Assert(t, "raw", buf.Bytes())
 }
