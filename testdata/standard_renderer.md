@@ -25,3 +25,12 @@ line 2
 
 ![alt text](./image.png    "image title")
 [text](./link.png	"title")
+
+This is the first
+paragraph.
+
+This is the second
+paragraph.
+
+This is a\
+line break.

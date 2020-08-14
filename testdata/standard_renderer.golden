@@ -1,8 +1,8 @@
 Head 1
 ======
 
-line 1
- line 2
+line 1\
+line 2
 
 Head 2
 ------
@@ -20,3 +20,10 @@ line 1 line 2
 **Strong**
 
 ![alt text](./image.png "image title") [text](./link.png "title")
+
+This is the first paragraph.
+
+This is the second paragraph.
+
+This is a\
+line break.

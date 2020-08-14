@@ -146,7 +146,7 @@ func RenderText(w util.BufWriter, source []byte, node ast.Node, entering bool) (
 
 	switch {
 	case n.HardLineBreak():
-		_, _ = w.WriteString("\n ")
+		_, _ = w.WriteString("\\\n")
 	case n.SoftLineBreak():
 		_ = w.WriteByte(' ')
 	}
