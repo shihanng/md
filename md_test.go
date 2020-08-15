@@ -14,16 +14,24 @@ import (
 )
 
 func TestRenderer(t *testing.T) {
-	input, err := ioutil.ReadFile(`testdata/standard_renderer.md`)
-	assert.NoError(t, err)
+	testCases := []string{
+		"standard_renderer",
+	}
 
-	var buf bytes.Buffer
-	reader := text.NewReader(input)
-	node := goldmark.DefaultParser().Parse(reader)
-	r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
+	for _, tc := range testCases {
+		t.Run(tc, func(t *testing.T) {
+			input, err := ioutil.ReadFile("testdata/" + tc + ".md")
+			assert.NoError(t, err)
 
-	assert.NoError(t, r.Render(&buf, input, node))
+			var buf bytes.Buffer
+			reader := text.NewReader(input)
+			node := goldmark.DefaultParser().Parse(reader)
+			r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
 
-	g := goldie.New(t)
-	g.Assert(t, "standard_renderer", buf.Bytes())
+			assert.NoError(t, r.Render(&buf, input, node))
+
+			g := goldie.New(t)
+			g.Assert(t, tc, buf.Bytes())
+		})
+	}
 }
