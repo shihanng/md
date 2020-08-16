@@ -173,6 +173,10 @@ func (r *Renderer) RenderText(w util.BufWriter, source []byte, node ast.Node, en
 	switch {
 	case n.HardLineBreak():
 		_, _ = w.WriteString("\\\n")
+		if r.blockquoteDepth > 0 {
+			_, _ = w.WriteString(quotes(r.blockquoteDepth))
+			_, _ = w.WriteString(" ")
+		}
 	case n.SoftLineBreak():
 		_ = w.WriteByte(' ')
 	}

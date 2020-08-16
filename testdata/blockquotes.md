@@ -1,13 +1,15 @@
 Before
 
-> First line
-> Another line
+> > First line
+> > Another line
 >
 > Second paragraph first line
-> Second paragraph another line
+> Second paragraph another line\
+> Second paragraph last line
 >
-> > Nested line
+> > Nested line\
+> Third paragraph
 >
-> Last line
+> Last line\
 
 After
