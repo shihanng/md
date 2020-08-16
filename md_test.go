@@ -16,6 +16,7 @@ import (
 func TestRenderer(t *testing.T) {
 	testCases := []string{
 		"standard_renderer",
+		"blockquotes",
 	}
 
 	for _, tc := range testCases {
