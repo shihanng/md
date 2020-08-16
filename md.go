@@ -50,16 +50,13 @@ func (r *Renderer) RenderBlockquote(w util.BufWriter, source []byte, node ast.No
 		r.blockquoteDepth++
 	} else {
 		r.blockquoteDepth--
-	}
 
-	if !entering {
-		if _, ok := node.NextSibling().(ast.Node); ok && r.blockquoteDepth > 0 {
+		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
 			_, _ = w.WriteString(quotes(r.blockquoteDepth))
-			_, _ = w.WriteString("\n")
-		} else if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
 			_, _ = w.WriteString("\n")
 		}
 	}
+
 	return ast.WalkContinue, nil
 }
 
@@ -94,12 +91,10 @@ func RenderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool
 func (r *Renderer) RenderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	// TODO: Handle list depth
 	if !entering {
-		if _, ok := node.NextSibling().(ast.Node); ok && r.blockquoteDepth > 0 {
+		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
 			_, _ = w.WriteString("\n")
 			_, _ = w.WriteString(quotes(r.blockquoteDepth))
 			_, _ = w.WriteString("\n")
-		} else if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
-			_, _ = w.WriteString("\n\n")
 		} else {
 			_, _ = w.WriteString("\n")
 		}
