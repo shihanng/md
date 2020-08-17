@@ -1,6 +1,7 @@
 package md
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/yuin/goldmark/ast"
@@ -19,8 +20,8 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindDocument, RenderNoop)
 	reg.Register(ast.KindHeading, RenderHeading)
 	reg.Register(ast.KindBlockquote, r.RenderBlockquote)
-	reg.Register(ast.KindCodeBlock, RenderNoop)
-	reg.Register(ast.KindFencedCodeBlock, RenderNoop)
+	reg.Register(ast.KindCodeBlock, RenderCodeBlock)
+	reg.Register(ast.KindFencedCodeBlock, RenderFencedCodeBlock)
 	reg.Register(ast.KindHTMLBlock, RenderNoop)
 	reg.Register(ast.KindList, RenderNoop)
 	reg.Register(ast.KindListItem, RenderNoop)
@@ -57,6 +58,37 @@ func (r *Renderer) RenderBlockquote(w util.BufWriter, source []byte, node ast.No
 		}
 	}
 
+	return ast.WalkContinue, nil
+}
+
+func RenderCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if entering {
+		_, _ = w.WriteString("```\n")
+		writeLines(w, source, node)
+	} else {
+		_, _ = w.WriteString("```\n")
+
+		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
+			_, _ = w.WriteString("\n")
+		}
+	}
+
+	return ast.WalkContinue, nil
+}
+
+func RenderFencedCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	n := node.(*ast.FencedCodeBlock)
+	if entering {
+		language := n.Language(source)
+		_, _ = w.WriteString(fmt.Sprintf("```%s\n", language))
+		writeLines(w, source, node)
+	} else {
+		_, _ = w.WriteString("```\n")
+
+		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
+			_, _ = w.WriteString("\n")
+		}
+	}
 	return ast.WalkContinue, nil
 }
 
@@ -170,6 +202,10 @@ func (r *Renderer) RenderText(w util.BufWriter, source []byte, node ast.Node, en
 	segment := n.Segment
 	_, _ = w.Write(segment.Value(source))
 
+	if n.IsRaw() {
+		return ast.WalkContinue, nil
+	}
+
 	switch {
 	case n.HardLineBreak():
 		_, _ = w.WriteString("\\\n")
@@ -186,4 +222,12 @@ func (r *Renderer) RenderText(w util.BufWriter, source []byte, node ast.Node, en
 
 func quotes(level int) string {
 	return strings.TrimSuffix(strings.Repeat("> ", level), " ")
+}
+
+func writeLines(w util.BufWriter, source []byte, n ast.Node) {
+	l := n.Lines().Len()
+	for i := 0; i < l; i++ {
+		line := n.Lines().At(i)
+		_, _ = w.WriteString(string(line.Value(source)))
+	}
 }
