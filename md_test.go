@@ -37,3 +37,28 @@ func TestRenderer(t *testing.T) {
 		})
 	}
 }
+
+func TestReRenderer(t *testing.T) {
+	testCases := []string{
+		"standard_renderer",
+		"blockquotes",
+		"codeblocks",
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc, func(t *testing.T) {
+			input, err := ioutil.ReadFile("testdata/" + tc + ".golden")
+			assert.NoError(t, err)
+
+			var buf bytes.Buffer
+			reader := text.NewReader(input)
+			node := goldmark.DefaultParser().Parse(reader)
+			r := renderer.NewRenderer(renderer.WithNodeRenderers(util.Prioritized(&Renderer{}, 1000)))
+
+			assert.NoError(t, r.Render(&buf, input, node))
+
+			g := goldie.New(t)
+			g.Assert(t, tc, buf.Bytes())
+		})
+	}
+}
