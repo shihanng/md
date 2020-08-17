@@ -1,4 +1,4 @@
-Inline `code`
+Inline `code1 code2 code3\n`
 
     indent 4 spaces
 

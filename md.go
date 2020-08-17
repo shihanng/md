@@ -32,7 +32,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	// inlines
 
 	reg.Register(ast.KindAutoLink, RenderNoop)
-	reg.Register(ast.KindCodeSpan, RenderNoop)
+	reg.Register(ast.KindCodeSpan, RenderCodeSpan)
 	reg.Register(ast.KindEmphasis, RenderEmphasis)
 	reg.Register(ast.KindImage, RenderImage)
 	reg.Register(ast.KindLink, RenderLink)
@@ -136,6 +136,12 @@ func (r *Renderer) RenderParagraph(w util.BufWriter, source []byte, node ast.Nod
 			_, _ = w.WriteString(" ")
 		}
 	}
+	return ast.WalkContinue, nil
+}
+
+func RenderCodeSpan(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = w.WriteByte('`')
+
 	return ast.WalkContinue, nil
 }
 
