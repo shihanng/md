@@ -31,7 +31,7 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 
 	// inlines
 
-	reg.Register(ast.KindAutoLink, RenderNoop)
+	reg.Register(ast.KindAutoLink, RenderAutoLink)
 	reg.Register(ast.KindCodeSpan, RenderCodeSpan)
 	reg.Register(ast.KindEmphasis, RenderEmphasis)
 	reg.Register(ast.KindImage, RenderImage)
@@ -136,6 +136,21 @@ func (r *Renderer) RenderParagraph(w util.BufWriter, source []byte, node ast.Nod
 			_, _ = w.WriteString(" ")
 		}
 	}
+	return ast.WalkContinue, nil
+}
+
+func RenderAutoLink(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if !entering {
+		return ast.WalkContinue, nil
+	}
+
+	n := node.(*ast.AutoLink)
+	url := n.URL(source)
+
+	_ = w.WriteByte('<')
+	_, _ = w.WriteString(string(url))
+	_ = w.WriteByte('>')
+
 	return ast.WalkContinue, nil
 }
 

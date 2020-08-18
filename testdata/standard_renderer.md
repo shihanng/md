@@ -34,3 +34,6 @@ paragraph.
 
 This is a\
 line break.
+<google.com>
+<http://../>
+<made-up-scheme://foo,bar>
