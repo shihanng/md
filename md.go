@@ -9,8 +9,39 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+type list struct {
+	marker    byte
+	number    int
+	isOrdered bool
+	offset    int
+}
+
 type Renderer struct {
 	blockquoteDepth int
+
+	lists []list
+}
+
+func (r *Renderer) currentList() list {
+	return r.lists[len(r.lists)-1]
+}
+
+func (r *Renderer) listString(node ast.Node) string {
+	if parent := node.Parent(); parent != nil && parent.Kind() == ast.KindListItem {
+		cl := r.currentList()
+
+		if node.PreviousSibling() == nil {
+			l := fmt.Sprintf("%c", cl.marker)
+			if cl.isOrdered {
+				l = fmt.Sprintf("%d%s", cl.number, l)
+			}
+			return l + strings.Repeat(" ", cl.offset-len(l))
+		} else {
+			return strings.Repeat(" ", cl.offset)
+		}
+	}
+
+	return ""
 }
 
 // RegisterFuncs implements github.com/yuin/goldmark/renderer NodeRenderer.RegisterFuncs.
@@ -20,11 +51,11 @@ func (r *Renderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindDocument, RenderNoop)
 	reg.Register(ast.KindHeading, RenderHeading)
 	reg.Register(ast.KindBlockquote, r.RenderBlockquote)
-	reg.Register(ast.KindCodeBlock, RenderCodeBlock)
-	reg.Register(ast.KindFencedCodeBlock, RenderFencedCodeBlock)
+	reg.Register(ast.KindCodeBlock, r.RenderCodeBlock)
+	reg.Register(ast.KindFencedCodeBlock, r.RenderFencedCodeBlock)
 	reg.Register(ast.KindHTMLBlock, RenderNoop)
-	reg.Register(ast.KindList, RenderNoop)
-	reg.Register(ast.KindListItem, RenderNoop)
+	reg.Register(ast.KindList, r.RenderList)
+	reg.Register(ast.KindListItem, r.RenderListItem)
 	reg.Register(ast.KindParagraph, r.RenderParagraph)
 	reg.Register(ast.KindTextBlock, RenderNoop)
 	reg.Register(ast.KindThematicBreak, RenderNoop)
@@ -48,6 +79,7 @@ func RenderNoop(w util.BufWriter, source []byte, node ast.Node, entering bool) (
 
 func (r *Renderer) RenderBlockquote(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
+		_, _ = w.WriteString(r.listString(node))
 		r.blockquoteDepth++
 	} else {
 		r.blockquoteDepth--
@@ -61,11 +93,13 @@ func (r *Renderer) RenderBlockquote(w util.BufWriter, source []byte, node ast.No
 	return ast.WalkContinue, nil
 }
 
-func RenderCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (r *Renderer) RenderCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
+		_, _ = w.WriteString(r.listString(node))
 		_, _ = w.WriteString("```\n")
-		writeLines(w, source, node)
+		r.writeLines(w, source, node)
 	} else {
+		_, _ = w.WriteString(r.listString(node))
 		_, _ = w.WriteString("```\n")
 
 		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
@@ -76,12 +110,13 @@ func RenderCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bo
 	return ast.WalkContinue, nil
 }
 
-func RenderFencedCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+func (r *Renderer) RenderFencedCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	n := node.(*ast.FencedCodeBlock)
 	if entering {
 		language := n.Language(source)
+		_, _ = w.WriteString(r.listString(node))
 		_, _ = w.WriteString(fmt.Sprintf("```%s\n", language))
-		writeLines(w, source, node)
+		r.writeLines(w, source, node)
 	} else {
 		_, _ = w.WriteString("```\n")
 
@@ -120,8 +155,31 @@ func RenderHeading(w util.BufWriter, source []byte, node ast.Node, entering bool
 	return ast.WalkContinue, nil
 }
 
+func (r *Renderer) RenderList(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	l := node.(*ast.List)
+	if entering {
+		r.lists = append(r.lists, list{
+			marker:    l.Marker,
+			number:    l.Start,
+			isOrdered: l.IsOrdered(),
+		})
+	} else {
+		r.lists = r.lists[:len(r.lists)]
+	}
+
+	return ast.WalkContinue, nil
+}
+
+func (r *Renderer) RenderListItem(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	li := node.(*ast.ListItem)
+	if entering {
+		r.lists[len(r.lists)-1].offset = li.Offset
+	}
+
+	return ast.WalkContinue, nil
+}
+
 func (r *Renderer) RenderParagraph(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
-	// TODO: Handle list depth
 	if !entering {
 		if n := node.NextSibling(); n != nil && n.Type() == ast.TypeBlock {
 			_, _ = w.WriteString("\n")
@@ -131,6 +189,8 @@ func (r *Renderer) RenderParagraph(w util.BufWriter, source []byte, node ast.Nod
 			_, _ = w.WriteString("\n")
 		}
 	} else {
+		_, _ = w.WriteString(r.listString(node))
+
 		if r.blockquoteDepth > 0 {
 			_, _ = w.WriteString(quotes(r.blockquoteDepth))
 			_, _ = w.WriteString(" ")
@@ -245,10 +305,11 @@ func quotes(level int) string {
 	return strings.TrimSuffix(strings.Repeat("> ", level), " ")
 }
 
-func writeLines(w util.BufWriter, source []byte, n ast.Node) {
+func (r *Renderer) writeLines(w util.BufWriter, source []byte, n ast.Node) {
 	l := n.Lines().Len()
 	for i := 0; i < l; i++ {
 		line := n.Lines().At(i)
+		_, _ = w.WriteString(r.listString(n))
 		_, _ = w.WriteString(string(line.Value(source)))
 	}
 }

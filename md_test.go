@@ -24,6 +24,7 @@ func TestRenderer(t *testing.T) {
 		"standard_renderer",
 		"blockquotes",
 		"codeblocks",
+		"list",
 	}
 
 	for _, tc := range testCases {
